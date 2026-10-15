@@ -1,0 +1,2258 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  
+
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Denk Kesirler Köprüsü: 2 Kişilik Yarış Düellosu</title>
+  <meta name="description" content="HTML, CSS ve Saf JavaScript ile iki kişilik denk kesir eşleştirme ve nehir köprüsü yarış oyunu. Doğru denk kesirleri seç, köprüyü kur ve karşı kıyıya ilk sen ulaş!" />
+  <meta property="og:title" content="Denk Kesirler Köprüsü: 2 Kişilik Yarış Düellosu" />
+  <meta property="og:description" content="İki kişilik nehir yarışı! Denk kesirleri bul, köprüyü tamamla, zaferi yakala!" />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary_large_image" />
+
+  <style>
+    /* ========================================================
+       DENK KESİRLER KÖPRÜSÜ - SAF CSS STİLLERİ
+       ======================================================== */
+    :root {
+      --bg-deep: #070d19;
+      --bg-panel: #0d172a;
+      --river-dark: #09203f;
+      --river-light: #1b4965;
+      --river-foam: #5390d9;
+      --p1-red: #ff4757;
+      --p1-red-dark: #b3202e;
+      --p1-red-glow: rgba(255, 71, 87, 0.45);
+      --p1-bg: rgba(255, 71, 87, 0.12);
+      --p2-blue: #00d2d3;
+      --p2-blue-dark: #0984e3;
+      --p2-blue-glow: rgba(0, 210, 211, 0.45);
+      --p2-bg: rgba(0, 210, 211, 0.12);
+      --gold: #feca57;
+      --gold-dark: #ff9f43;
+      --wood-dark: #4a2c11;
+      --wood-light: #7c4a1e;
+      --wood-plank: #965a27;
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: radial-gradient(circle at 50% 20%, #0d1f38 0%, #060c18 80%, #03060c 100%);
+      color: var(--text-main);
+      height: 100vh;
+      width: 100vw;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ÜST BAŞLIK VE KONTROL ÇUBUĞU */
+    header.game-header {
+      flex: 0 0 auto;
+      background: rgba(13, 23, 42, 0.85);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border-bottom: 2px solid rgba(255, 255, 255, 0.08);
+      padding: 8px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      z-index: 50;
+      position: relative;
+    }
+
+    .brand-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-icon {
+      font-size: 26px;
+      filter: drop-shadow(0 0 8px rgba(254, 202, 87, 0.5));
+      animation: floatBadge 3s ease-in-out infinite;
+    }
+
+    .brand-text h1 {
+      font-size: 1.15rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #ffffff 0%, #feca57 50%, #ff9f43 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      line-height: 1.2;
+    }
+
+    .brand-text span {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-weight: 600;
+    }
+
+    .header-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-header {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: var(--text-main);
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-header:hover {
+      background: rgba(255, 255, 255, 0.18);
+      border-color: rgba(255, 255, 255, 0.3);
+      transform: translateY(-1px);
+    }
+
+    .btn-header.active {
+      background: linear-gradient(135deg, #2e86de, #0984e3);
+      border-color: #54a0ff;
+      box-shadow: 0 0 12px rgba(46, 134, 222, 0.5);
+    }
+
+    /* ANA OYUN ALANI (NEHİR & KÖPRÜLER) */
+    main.game-arena {
+      flex: 1 1 auto;
+      position: relative;
+      display: flex;
+      overflow: hidden;
+      background: linear-gradient(180deg, #07172c 0%, #0a2540 40%, #06182e 80%, #04101e 100%);
+    }
+
+    /* NEHİR VE SU DALGALARI ARKA PLANI */
+    .river-background {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 1;
+    }
+
+    .river-wave {
+      position: absolute;
+      width: 200%;
+      height: 100%;
+      background: radial-gradient(ellipse at 50% 50%, rgba(30, 80, 130, 0.3) 0%, rgba(9, 32, 63, 0) 70%);
+      opacity: 0.7;
+      animation: riverDrift 14s linear infinite;
+    }
+
+    .water-line {
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, rgba(83, 144, 217, 0.4), rgba(0, 210, 211, 0.5), transparent);
+      animation: waterWave 6s ease-in-out infinite alternate;
+    }
+
+    .water-line:nth-child(1) { top: 22%; animation-delay: 0s; }
+    .water-line:nth-child(2) { top: 42%; animation-delay: 1.5s; }
+    .water-line:nth-child(3) { top: 62%; animation-delay: 3s; }
+    .water-line:nth-child(4) { top: 82%; animation-delay: 4.5s; }
+
+    /* ORTA AYIRICI HAT VE VS ROZETİ */
+    .arena-divider {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 4px;
+      background: linear-gradient(180deg, rgba(254, 202, 87, 0.6) 0%, rgba(255, 255, 255, 0.15) 50%, rgba(254, 202, 87, 0.6) 100%);
+      box-shadow: 0 0 10px rgba(254, 202, 87, 0.3);
+      z-index: 10;
+    }
+
+    .vs-badge {
+      position: absolute;
+      top: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: radial-gradient(circle, #222f3e 0%, #101724 100%);
+      border: 2px solid var(--gold);
+      color: var(--gold);
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 900;
+      letter-spacing: 0.1em;
+      box-shadow: 0 0 16px rgba(254, 202, 87, 0.4);
+      z-index: 25;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* OYUNCU PİSTİ (SOL VE SAĞ ALAN) */
+    .player-track {
+      flex: 1 1 50%;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 14px 20px 18px;
+      z-index: 5;
+    }
+
+    .player-track.p1 {
+      border-right: 1px solid rgba(255, 71, 87, 0.2);
+    }
+
+    .player-track.p2 {
+      border-left: 1px solid rgba(0, 210, 211, 0.2);
+    }
+
+    /* OYUNCU BİLGİ KARTI */
+    .player-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(13, 23, 42, 0.75);
+      backdrop-filter: blur(6px);
+      border-radius: 14px;
+      padding: 10px 16px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+      position: relative;
+    }
+
+    .player-track.p1 .player-card {
+      border-color: rgba(255, 71, 87, 0.4);
+      box-shadow: 0 0 15px rgba(255, 71, 87, 0.15);
+    }
+
+    .player-track.p2 .player-card {
+      border-color: rgba(0, 210, 211, 0.4);
+      box-shadow: 0 0 15px rgba(0, 210, 211, 0.15);
+    }
+
+    .player-identity {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .player-avatar-mini {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      background: rgba(255, 255, 255, 0.05);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .p1 .player-avatar-mini {
+      border: 2px solid var(--p1-red);
+      background: radial-gradient(circle, rgba(255, 71, 87, 0.3) 0%, rgba(255, 71, 87, 0.05) 100%);
+      box-shadow: 0 0 12px var(--p1-red-glow);
+    }
+
+    .p2 .player-avatar-mini {
+      border: 2px solid var(--p2-blue);
+      background: radial-gradient(circle, rgba(0, 210, 211, 0.3) 0%, rgba(0, 210, 211, 0.05) 100%);
+      box-shadow: 0 0 12px var(--p2-blue-glow);
+    }
+
+    .player-name-row {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .player-tag {
+      font-size: 0.7rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .p1 .player-tag { color: var(--p1-red); }
+    .p2 .player-tag { color: var(--p2-blue); }
+
+    .player-name {
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: #ffffff;
+    }
+
+    .progress-pill {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 4px;
+    }
+
+    .progress-pill .step-text {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+
+    .progress-pill .step-dots {
+      display: flex;
+      gap: 4px;
+    }
+
+    .step-dot {
+      width: 14px;
+      height: 10px;
+      border-radius: 3px;
+      background: rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .p1 .step-dot.filled {
+      background: var(--p1-red);
+      border-color: #ff6b81;
+      box-shadow: 0 0 8px var(--p1-red-glow);
+      transform: scaleY(1.2);
+    }
+
+    .p2 .step-dot.filled {
+      background: var(--p2-blue);
+      border-color: #48dbfb;
+      box-shadow: 0 0 8px var(--p2-blue-glow);
+      transform: scaleY(1.2);
+    }
+
+    /* KÖPRÜ SAHNESİ: NEHİR GEÇİŞİ */
+    .bridge-stage {
+      position: relative;
+      flex: 1 1 auto;
+      margin: 10px 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 220px;
+    }
+
+    /* HEDEF KIYI (BİTİŞ ADASI) */
+    .shore-target {
+      position: relative;
+      height: 48px;
+      background: linear-gradient(180deg, #1b382b 0%, #11241a 100%);
+      border-radius: 12px 12px 6px 6px;
+      border: 2px solid #2ed573;
+      box-shadow: 0 0 16px rgba(46, 213, 115, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      color: #a8ffb2;
+      font-weight: 800;
+      font-size: 0.85rem;
+      letter-spacing: 0.04em;
+    }
+
+    .shore-target .target-trophy {
+      font-size: 22px;
+      animation: pulseTrophy 2s infinite ease-in-out;
+    }
+
+    /* KÖPRÜ İSKELESİ & ADIMLARI (5 ADIM) */
+    .bridge-path {
+      position: relative;
+      flex: 1 1 auto;
+      display: flex;
+      flex-direction: column-reverse;
+      justify-content: space-evenly;
+      padding: 10px 24px;
+    }
+
+    .bridge-rope-left, .bridge-rope-right {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background: repeating-linear-gradient(180deg, #573d23 0px, #362312 6px, #8d6238 12px);
+      box-shadow: 1px 0 3px rgba(0,0,0,0.5);
+      opacity: 0.65;
+    }
+    .bridge-rope-left { left: 24px; }
+    .bridge-rope-right { right: 24px; }
+
+    /* KÖPRÜ TAHTALARI */
+    .plank-slot {
+      position: relative;
+      height: 38px;
+      border-radius: 8px;
+      background: rgba(18, 30, 49, 0.5);
+      border: 1px dashed rgba(255, 255, 255, 0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .plank-slot .slot-number {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: rgba(255, 255, 255, 0.25);
+    }
+
+    .plank-slot.completed {
+      background: linear-gradient(90deg, #613915 0%, #87501f 25%, #9e6027 50%, #87501f 75%, #613915 100%);
+      border: 2px solid #b87a3b;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5), inset 0 2px 2px rgba(255, 255, 255, 0.2);
+      animation: plankDrop 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .p1 .plank-slot.completed {
+      border-color: #ff6b81;
+      box-shadow: 0 0 14px var(--p1-red-glow), 0 4px 8px rgba(0,0,0,0.5);
+    }
+
+    .p2 .plank-slot.completed {
+      border-color: #48dbfb;
+      box-shadow: 0 0 14px var(--p2-blue-glow), 0 4px 8px rgba(0,0,0,0.5);
+    }
+
+    .plank-slot.completed .slot-number {
+      color: #f1f2f6;
+      font-weight: 900;
+      letter-spacing: 0.05em;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+      font-size: 0.78rem;
+    }
+
+    .plank-slot.active-target {
+      border-color: var(--gold);
+      animation: targetPulse 1.5s infinite;
+    }
+
+    /* BAŞLANGIÇ KIYISI */
+    .shore-start {
+      position: relative;
+      height: 48px;
+      background: linear-gradient(0deg, #1b263b 0%, #293241 100%);
+      border-radius: 6px 6px 12px 12px;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      letter-spacing: 0.05em;
+    }
+
+    /* OYUNCU KARAKTERİ (AVATAR) */
+    .character-runner {
+      position: absolute;
+      width: 48px;
+      height: 48px;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 20;
+      transition: top 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+    }
+
+    .char-sprite {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      position: relative;
+      box-shadow: 0 6px 14px rgba(0,0,0,0.45);
+    }
+
+    .p1 .char-sprite {
+      background: radial-gradient(circle at 35% 35%, #ff7675, #d63031);
+      border: 2px solid #ffffff;
+      box-shadow: 0 0 16px var(--p1-red-glow), 0 6px 12px rgba(0,0,0,0.5);
+    }
+
+    .p2 .char-sprite {
+      background: radial-gradient(circle at 35% 35%, #74b9ff, #0984e3);
+      border: 2px solid #ffffff;
+      box-shadow: 0 0 16px var(--p2-blue-glow), 0 6px 12px rgba(0,0,0,0.5);
+    }
+
+    .char-shadow {
+      position: absolute;
+      bottom: -6px;
+      width: 32px;
+      height: 8px;
+      background: rgba(0, 0, 0, 0.4);
+      border-radius: 50%;
+      filter: blur(2px);
+    }
+
+    /* KARAKTER ANİMASYONLARI */
+    .character-runner.jumping {
+      animation: runnerJump 0.45s ease;
+    }
+
+    .character-runner.stunned {
+      animation: runnerShake 0.6s ease;
+    }
+
+    .character-runner.stunned .char-sprite {
+      filter: grayscale(0.5) brightness(0.8);
+    }
+
+    /* KESİR KONTROL PANELİ & HEDEF KESİR */
+    .quiz-control-deck {
+      background: rgba(13, 23, 42, 0.88);
+      backdrop-filter: blur(8px);
+      border-radius: 16px;
+      padding: 12px 14px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      position: relative;
+      box-shadow: 0 6px 24px rgba(0,0,0,0.4);
+    }
+
+    .p1 .quiz-control-deck {
+      border-color: rgba(255, 71, 87, 0.35);
+    }
+    .p2 .quiz-control-deck {
+      border-color: rgba(0, 210, 211, 0.35);
+    }
+
+    /* HEDEF KESİR GÖSTERGESİ */
+    .target-fraction-box {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(0, 0, 0, 0.35);
+      border-radius: 12px;
+      padding: 8px 14px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .target-label {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .target-label .lbl-top {
+      font-size: 0.68rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--gold);
+    }
+
+    .target-label .lbl-sub {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    .fraction-badge {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.03));
+      border: 2px solid var(--gold);
+      padding: 4px 14px;
+      border-radius: 10px;
+      box-shadow: 0 0 14px rgba(254, 202, 87, 0.3);
+      min-width: 54px;
+    }
+
+    .fraction-badge .num, .fraction-stone .num {
+      font-size: 1.15rem;
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .fraction-badge .bar, .fraction-stone .bar {
+      width: 100%;
+      height: 2px;
+      background: currentColor;
+      margin: 3px 0;
+      border-radius: 2px;
+    }
+
+    .fraction-badge .den, .fraction-stone .den {
+      font-size: 1.15rem;
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    /* SEÇENEK TAŞLARI (3 ADET) */
+    .stones-container {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .fraction-stone {
+      position: relative;
+      background: linear-gradient(180deg, #2b394e 0%, #172437 100%);
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      border-radius: 12px;
+      padding: 8px 4px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #ffffff;
+      cursor: pointer;
+      transition: all 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.2);
+    }
+
+    .fraction-stone:hover {
+      transform: translateY(-3px) scale(1.02);
+      border-color: #ffffff;
+      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.45);
+    }
+
+    .fraction-stone:active {
+      transform: translateY(1px) scale(0.98);
+    }
+
+    .p1 .fraction-stone:hover {
+      border-color: #ff6b81;
+      box-shadow: 0 0 14px var(--p1-red-glow);
+    }
+
+    .p2 .fraction-stone:hover {
+      border-color: #48dbfb;
+      box-shadow: 0 0 14px var(--p2-blue-glow);
+    }
+
+    /* TUŞ ETİKETİ (A, S, D veya OK TUŞLARI) */
+    .key-hint {
+      position: absolute;
+      top: 4px;
+      left: 6px;
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      color: var(--gold);
+      font-size: 0.65rem;
+      font-weight: 800;
+      padding: 1px 5px;
+      border-radius: 4px;
+      line-height: 1.2;
+    }
+
+    /* GERİ BİLDİRİM VE DURUM ŞERİDİ */
+    .feedback-banner {
+      min-height: 22px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-align: center;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2px 8px;
+      transition: all 0.2s ease;
+    }
+
+    .feedback-banner.success {
+      background: rgba(46, 213, 115, 0.2);
+      color: #2ed573;
+      border: 1px solid rgba(46, 213, 115, 0.4);
+    }
+
+    .feedback-banner.error {
+      background: rgba(255, 71, 87, 0.25);
+      color: #ff6b81;
+      border: 1px solid rgba(255, 71, 87, 0.5);
+      animation: bannerShake 0.4s ease;
+    }
+
+    .feedback-banner.stunned {
+      background: rgba(254, 202, 87, 0.2);
+      color: var(--gold);
+      border: 1px solid rgba(254, 202, 87, 0.4);
+    }
+
+    /* POPUP VE MODAL STİLLERİ */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(4, 8, 16, 0.85);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+      padding: 16px;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-card {
+      background: linear-gradient(145deg, #16243b, #0d1728);
+      border: 2px solid rgba(254, 202, 87, 0.4);
+      border-radius: 20px;
+      padding: 28px 24px;
+      max-width: 500px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7), 0 0 30px rgba(254, 202, 87, 0.2);
+      transform: scale(0.92);
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      position: relative;
+    }
+
+    .modal-overlay.active .modal-card {
+      transform: scale(1);
+    }
+
+    .modal-badge-icon {
+      font-size: 54px;
+      margin-bottom: 8px;
+      display: inline-block;
+      animation: bounceWin 1.2s infinite alternate ease-in-out;
+    }
+
+    .modal-title {
+      font-size: 1.6rem;
+      font-weight: 900;
+      background: linear-gradient(135deg, #ffffff 0%, #feca57 70%, #ff9f43 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 8px;
+    }
+
+    .modal-subtitle {
+      font-size: 0.92rem;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    /* İSTATİSTİK GRID */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-bottom: 22px;
+      text-align: left;
+    }
+
+    .stat-box {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 10px 14px;
+    }
+
+    .stat-box.p1-stat { border-color: rgba(255, 71, 87, 0.4); }
+    .stat-box.p2-stat { border-color: rgba(0, 210, 211, 0.4); }
+
+    .stat-header {
+      font-size: 0.72rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .stat-value {
+      font-size: 1.1rem;
+      font-weight: 900;
+      color: #ffffff;
+    }
+
+    .stat-detail {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #2ed573 0%, #10ac84 100%);
+      color: #032d18;
+      font-weight: 800;
+      font-size: 0.95rem;
+      border: none;
+      border-radius: 10px;
+      padding: 12px 24px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 16px rgba(46, 213, 115, 0.4);
+      transition: all 0.2s ease;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(46, 213, 115, 0.6);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: var(--text-main);
+      font-weight: 700;
+      font-size: 0.92rem;
+      border-radius: 10px;
+      padding: 12px 18px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    /* REHBER İÇERİĞİ */
+    .guide-box {
+      text-align: left;
+      font-size: 0.85rem;
+      line-height: 1.5;
+      color: #cbd5e1;
+      margin-bottom: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .guide-rule {
+      background: rgba(255, 255, 255, 0.04);
+      border-left: 3px solid var(--gold);
+      padding: 8px 12px;
+      border-radius: 0 8px 8px 0;
+    }
+
+    .guide-rule strong {
+      color: var(--gold);
+    }
+
+    /* SAF CANVAS KONFETİ */
+    #confettiCanvas {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 999;
+    }
+
+    /* SU SIÇRAMA PARÇACIKLARI */
+    .splash-particle {
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #54a0ff;
+      pointer-events: none;
+      animation: particlePop 0.6s ease-out forwards;
+      z-index: 30;
+    }
+
+    /* ANİMASYON KEYFRAME'LERİ */
+    @keyframes riverDrift {
+      0% { transform: translateY(-50%) rotate(0deg); }
+      100% { transform: translateY(0%) rotate(0deg); }
+    }
+
+    @keyframes waterWave {
+      0% { transform: scaleX(0.9) translateX(-20px); opacity: 0.3; }
+      100% { transform: scaleX(1.1) translateX(20px); opacity: 0.8; }
+    }
+
+    @keyframes floatBadge {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-3px); }
+    }
+
+    @keyframes pulseTrophy {
+      0%, 100% { transform: scale(1); filter: drop-shadow(0 0 4px #feca57); }
+      50% { transform: scale(1.15); filter: drop-shadow(0 0 10px #feca57); }
+    }
+
+    @keyframes targetPulse {
+      0%, 100% { box-shadow: 0 0 6px rgba(254, 202, 87, 0.3); border-color: rgba(254, 202, 87, 0.4); }
+      50% { box-shadow: 0 0 16px rgba(254, 202, 87, 0.7); border-color: rgba(254, 202, 87, 0.9); }
+    }
+
+    @keyframes plankDrop {
+      0% { transform: translateY(-20px) scale(1.1); opacity: 0; }
+      70% { transform: translateY(3px) scale(0.98); opacity: 1; }
+      100% { transform: translateY(0) scale(1); }
+    }
+
+    @keyframes runnerJump {
+      0% { transform: translate(-50%, -50%) scale(1); }
+      40% { transform: translate(-50%, -100%) scale(1.2); }
+      100% { transform: translate(-50%, -50%) scale(1); }
+    }
+
+    @keyframes runnerShake {
+      0%, 100% { transform: translate(-50%, -50%); }
+      20% { transform: translate(-65%, -50%) rotate(-8deg); }
+      40% { transform: translate(-35%, -50%) rotate(8deg); }
+      60% { transform: translate(-60%, -50%) rotate(-4deg); }
+      80% { transform: translate(-40%, -50%) rotate(4deg); }
+    }
+
+    @keyframes bannerShake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-6px); }
+      75% { transform: translateX(6px); }
+    }
+
+    @keyframes bounceWin {
+      0% { transform: translateY(0) rotate(-4deg) scale(1); }
+      100% { transform: translateY(-10px) rotate(4deg) scale(1.1); }
+    }
+
+    @keyframes particlePop {
+      0% { transform: scale(1); opacity: 1; }
+      100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+    }
+
+    /* MOBİL VE KÜÇÜK EKRAN UYUMLULUĞU */
+    @media (max-width: 768px) {
+      header.game-header {
+        padding: 6px 10px;
+      }
+      .brand-text h1 {
+        font-size: 0.95rem;
+      }
+      .brand-text span {
+        display: none;
+      }
+      .player-track {
+        padding: 8px 10px 12px;
+      }
+      .player-card {
+        padding: 6px 10px;
+      }
+      .player-avatar-mini {
+        width: 36px;
+        height: 36px;
+        font-size: 20px;
+      }
+      .player-name {
+        font-size: 0.9rem;
+      }
+      .plank-slot {
+        height: 32px;
+      }
+      .character-runner {
+        width: 38px;
+        height: 38px;
+      }
+      .char-sprite {
+        width: 34px;
+        height: 34px;
+        font-size: 20px;
+      }
+      .fraction-stone .num, .fraction-stone .den {
+        font-size: 0.95rem;
+      }
+      .key-hint {
+        font-size: 0.55rem;
+        padding: 1px 3px;
+      }
+    }
+  </style>
+<script src="/_aistudio-iframe.js?v=6634132a"></script></head>
+<body>
+
+  <!-- ÜST MENÜ & KONTROLLER -->
+  <header class="game-header">
+    <div class="brand-title">
+      <div class="brand-icon">🌉</div>
+      <div class="brand-text">
+        <h1>Denk Kesirler Köprüsü</h1>
+        <span>2 Kişilik Yarış Düellosu</span>
+      </div>
+    </div>
+
+    <div class="header-controls">
+      <button id="btnMode" class="btn-header" title="Oyun Modunu Değiştir">
+        <span id="modeIcon">👥</span>
+        <span id="modeText">2 Kişilik</span>
+      </button>
+
+      <button id="btnSound" class="btn-header" title="Sesi Aç/Kapat">
+        <span id="soundIcon">🔊</span>
+      </button>
+
+      <button id="btnGuide" class="btn-header" title="Nasıl Oynanır?">
+        <span>❓</span>
+        <span>Rehber</span>
+      </button>
+
+      <button id="btnDownload" class="btn-header" title="HTML Oyun Dosyasını İndir">
+        <span>📥</span>
+        <span>İndir</span>
+      </button>
+
+      <button id="btnRestart" class="btn-header" title="Yeniden Başlat">
+        <span>🔄</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ANA OYUN ARENASI (NEHİR VE KÖPRÜLER) -->
+  <main class="game-arena">
+    <!-- NEHİR DİNAMİK EFEKTLERİ -->
+    <div class="river-background">
+      <div class="river-wave"></div>
+      <div class="water-line"></div>
+      <div class="water-line"></div>
+      <div class="water-line"></div>
+      <div class="water-line"></div>
+    </div>
+
+    <!-- ORTA VS ÇİZGİSİ -->
+    <div class="arena-divider"></div>
+    <div class="vs-badge">⚡ DÜELLO ⚡</div>
+
+    <!-- OYUNCU 1 PARKURU (KIRMIZI / ALEV TİLKİ) -->
+    <section class="player-track p1" id="trackP1">
+      <!-- OYUNCU 1 KARTI -->
+      <div class="player-card">
+        <div class="player-identity">
+          <div class="player-avatar-mini">🦊</div>
+          <div class="player-name-row">
+            <span class="player-tag">OYUNCU 1</span>
+            <span class="player-name">Kızıl Tilki</span>
+          </div>
+        </div>
+
+        <div class="progress-pill">
+          <span class="step-text" id="p1StepLabel">Köprü: 0 / 5</span>
+          <div class="step-dots" id="p1Dots">
+            <div class="step-dot"></div>
+            <div class="step-dot"></div>
+            <div class="step-dot"></div>
+            <div class="step-dot"></div>
+            <div class="step-dot"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- KÖPRÜ SAHNESİ -->
+      <div class="bridge-stage" id="stageP1">
+        <!-- KARŞI KIYI (BİTİŞ) -->
+        <div class="shore-target">
+          <span class="target-trophy">🏆</span>
+          <span>Zafer Kalesi</span>
+        </div>
+
+        <!-- KÖPRÜ BASAMAKLARI -->
+        <div class="bridge-path" id="p1BridgePath">
+          <div class="bridge-rope-left"></div>
+          <div class="bridge-rope-right"></div>
+
+          <!-- 5 BASAMAK (Aşağıdan yukarıya 1'den 5'e) -->
+          <div class="plank-slot" data-step="5"><span class="slot-number">5. Basamak</span></div>
+          <div class="plank-slot" data-step="4"><span class="slot-number">4. Basamak</span></div>
+          <div class="plank-slot" data-step="3"><span class="slot-number">3. Basamak</span></div>
+          <div class="plank-slot" data-step="2"><span class="slot-number">2. Basamak</span></div>
+          <div class="plank-slot active-target" data-step="1"><span class="slot-number">1. Basamak</span></div>
+        </div>
+
+        <!-- BAŞLANGIÇ KIYISI -->
+        <div class="shore-start" id="p1ShoreStart">
+          <span>Başlangıç İskelesi</span>
+        </div>
+
+        <!-- KARAKTER (KOŞUCU) -->
+        <div class="character-runner" id="p1Runner">
+          <div class="char-sprite">🦊</div>
+          <div class="char-shadow"></div>
+        </div>
+      </div>
+
+      <!-- KESİR SORU VE SEÇENEK PANELİ -->
+      <div class="quiz-control-deck">
+        <div class="target-fraction-box">
+          <div class="target-label">
+            <span class="lbl-top">Hedef Kesir</span>
+            <span class="lbl-sub">Denk olan taşı seç!</span>
+          </div>
+          <div class="fraction-badge" id="p1TargetBadge">
+            <span class="num">2</span>
+            <div class="bar"></div>
+            <span class="den">3</span>
+          </div>
+        </div>
+
+        <!-- 3 ADET SEÇENEK TAŞI -->
+        <div class="stones-container" id="p1Stones">
+          <!-- Dinamik doldurulur -->
+        </div>
+
+        <!-- ANLIK GERİ BİLDİRİM -->
+        <div class="feedback-banner" id="p1Feedback">
+          Tuşlar: <strong>[A] [S] [D]</strong> veya Taşa Tıkla
+        </div>
+      </div>
+    </section>
+
+    <!-- OYUNCU 2 PARKURU (MAVİ / BUZ KURDU) -->
+    <section class="player-track p2" id="trackP2">
+      <!-- OYUNCU 2 KARTI -->
+      <div class="player-card">
+        <div class="player-identity">
+          <div class="player-avatar-mini" id="p2AvatarMini">🐺</div>
+          <div class="player-name-row">
+            <span class="player-tag" id="p2TagLabel">OYUNCU 2</span>
+            <span class="player-name" id="p2NameLabel">Gök Kurdu</span>
+          </div>
+        </div>
+
+        <div class="progress-pill">
+          <span class="step-text" id="p2StepLabel">Köprü: 0 / 5</span>
+          <div class="step-dots" id="p2Dots">
+            <div class="step-dot"></div>
+            <div class="step-dot"></div>
+            <div class="step-dot"></div>
+            <div class="step-dot"></div>
+            <div class="step-dot"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- KÖPRÜ SAHNESİ -->
+      <div class="bridge-stage" id="stageP2">
+        <!-- KARŞI KIYI (BİTİŞ) -->
+        <div class="shore-target">
+          <span class="target-trophy">🏆</span>
+          <span>Zafer Kalesi</span>
+        </div>
+
+        <!-- KÖPRÜ BASAMAKLARI -->
+        <div class="bridge-path" id="p2BridgePath">
+          <div class="bridge-rope-left"></div>
+          <div class="bridge-rope-right"></div>
+
+          <!-- 5 BASAMAK -->
+          <div class="plank-slot" data-step="5"><span class="slot-number">5. Basamak</span></div>
+          <div class="plank-slot" data-step="4"><span class="slot-number">4. Basamak</span></div>
+          <div class="plank-slot" data-step="3"><span class="slot-number">3. Basamak</span></div>
+          <div class="plank-slot" data-step="2"><span class="slot-number">2. Basamak</span></div>
+          <div class="plank-slot active-target" data-step="1"><span class="slot-number">1. Basamak</span></div>
+        </div>
+
+        <!-- BAŞLANGIÇ KIYISI -->
+        <div class="shore-start" id="p2ShoreStart">
+          <span>Başlangıç İskelesi</span>
+        </div>
+
+        <!-- KARAKTER (KOŞUCU) -->
+        <div class="character-runner" id="p2Runner">
+          <div class="char-sprite" id="p2RunnerSprite">🐺</div>
+          <div class="char-shadow"></div>
+        </div>
+      </div>
+
+      <!-- KESİR SORU VE SEÇENEK PANELİ -->
+      <div class="quiz-control-deck">
+        <div class="target-fraction-box">
+          <div class="target-label">
+            <span class="lbl-top">Hedef Kesir</span>
+            <span class="lbl-sub">Denk olan taşı seç!</span>
+          </div>
+          <div class="fraction-badge" id="p2TargetBadge">
+            <span class="num">3</span>
+            <div class="bar"></div>
+            <span class="den">4</span>
+          </div>
+        </div>
+
+        <!-- 3 ADET SEÇENEK TAŞI -->
+        <div class="stones-container" id="p2Stones">
+          <!-- Dinamik doldurulur -->
+        </div>
+
+        <!-- ANLIK GERİ BİLDİRİM -->
+        <div class="feedback-banner" id="p2Feedback">
+          Tuşlar: <strong>[←] [↓] [→]</strong> veya <strong>[J] [K] [L]</strong>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- KAZANMA TEBRİK MODALI (VICTORY MODAL) -->
+  <div class="modal-overlay" id="victoryModal">
+    <div class="modal-card">
+      <div class="modal-badge-icon">👑</div>
+      <h2 class="modal-title" id="victoryTitle">TEBRİKLER! KAZANDIN!</h2>
+      <p class="modal-subtitle" id="victorySubtitle">Karşı kıyıya ilk sen ulaştın ve Zafer Kupasını kaldırdın!</p>
+
+      <div class="stats-grid">
+        <div class="stat-box p1-stat">
+          <div class="stat-header" style="color: var(--p1-red);">🦊 Kızıl Tilki</div>
+          <div class="stat-value" id="statP1Score">5 Doğru</div>
+          <div class="stat-detail" id="statP1Errors">0 Hata</div>
+        </div>
+        <div class="stat-box p2-stat">
+          <div class="stat-header" style="color: var(--p2-blue);" id="statP2Header">🐺 Gök Kurdu</div>
+          <div class="stat-value" id="statP2Score">3 Doğru</div>
+          <div class="stat-detail" id="statP2Errors">1 Hata</div>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-primary" id="btnPlayAgain">
+          <span>⚔️</span>
+          <span>Rövanş Maçı Yap</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- NASIL OYNANIR REHBERİ MODALI -->
+  <div class="modal-overlay" id="guideModal">
+    <div class="modal-card">
+      <div class="modal-badge-icon">📖</div>
+      <h2 class="modal-title">Nasıl Oynanır?</h2>
+      <p class="modal-subtitle">Denk kesirleri doğru seç, köprüyü tamamla ve yarışı kazan!</p>
+
+      <div class="guide-box">
+        <div class="guide-rule">
+          <strong>💡 Denk Kesir Nedir?</strong>
+          Bir kesrin pay ve paydası aynı sayıyla çarpıldığında (genişletme) veya bölündüğünde (sadeleştirme) değeri değişmez. Örn: <strong>2/3 = 4/6 = 6/9</strong>
+        </div>
+
+        <div class="guide-rule">
+          <strong>🎮 Oyuncu 1 Kontrolleri (Kızıl Tilki):</strong>
+          Klavye tuşları: <strong>[A]</strong> (1. Taş), <strong>[S]</strong> (2. Taş), <strong>[D]</strong> (3. Taş) ya da doğrudan taşa dokun/tıkla.
+        </div>
+
+        <div class="guide-rule">
+          <strong>🎮 Oyuncu 2 Kontrolleri (Gök Kurdu):</strong>
+          Klavye tuşları: <strong>[← Sol]</strong>, <strong>[↓ Aşağı]</strong>, <strong>[→ Sağ]</strong> veya <strong>[J]</strong>, <strong>[K]</strong>, <strong>[L]</strong> ya da taşa dokun/tıkla.
+        </div>
+
+        <div class="guide-rule">
+          <strong>⚡ Köprü Kuralları:</strong>
+          Doğru taş seçildiğinde 1 tahta döşenir ve karakter zıplar. Yanlış taşta köprü sarsılır ve oyuncu 1.2 saniye ceza alır. 5 tahtayı ilk tamamlayan kazanır!
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-primary" id="btnCloseGuide">
+          <span>🚀</span>
+          <span>Anladım, Oyuna Dön!</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- KODU İNDİR VE BİLGİ MODALI -->
+  <div class="modal-overlay" id="downloadModal">
+    <div class="modal-card">
+      <div class="modal-badge-icon">📥</div>
+      <h2 class="modal-title">Oyunu İndir</h2>
+      <p class="modal-subtitle">Bu oyunu tek bir HTML dosyası olarak bilgisayarınıza veya telefonunuza anında indirebilirsiniz.</p>
+
+      <div class="guide-box">
+        <div class="guide-rule">
+          <strong>💾 Tek Dosyada Eksiksiz Kod:</strong>
+          Tüm HTML arayüzü, CSS stilleri, oyun mantığı, çizimler ve Web Audio ses efektleri tek bir <strong>.html</strong> dosyasında toplanmıştır. Hiçbir kurulum veya internet bağlantısı gerekmez!
+        </div>
+        <div class="guide-rule">
+          <strong>🌐 Nasıl Çalıştırılır?</strong>
+          İndirdiğiniz <strong>denk-kesirler-koprusu.html</strong> dosyasına çift tıklayarak Chrome, Edge, Safari veya cep telefonunuzun tarayıcısında anında oynayabilirsiniz.
+        </div>
+      </div>
+
+      <div class="modal-actions" style="flex-wrap: wrap;">
+        <button class="btn-primary" id="btnDownloadConfirm">
+          <span>💾</span>
+          <span>Hemen İndir (.html)</span>
+        </button>
+        <button class="btn-secondary" id="btnCopyCode">
+          <span>📋</span>
+          <span id="copyCodeText">Kodu Kopyala</span>
+        </button>
+        <button class="btn-secondary" id="btnCloseDownload">
+          <span>Kapat</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SAF CANVAS KONFETİ ALANI -->
+  <canvas id="confettiCanvas"></canvas>
+
+  <!-- ========================================================
+       DENK KESİRLER KÖPRÜSÜ - SAF JAVASCRIPT MOTORU
+       ======================================================== -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      'use strict';
+
+      /* ----------------------------------------------------
+         1. WEB AUDIO API SES MOTORU (Dahili Sentezleyici)
+         ---------------------------------------------------- */
+      class SoundEngine {
+        constructor() {
+          this.ctx = null;
+          this.muted = false;
+        }
+
+        initContext() {
+          if (!this.ctx) {
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            if (AudioCtx) {
+              this.ctx = new AudioCtx();
+            }
+          }
+          if (this.ctx && this.ctx.state === 'suspended') {
+            this.ctx.resume();
+          }
+        }
+
+        toggleMute() {
+          this.muted = !this.muted;
+          return this.muted;
+        }
+
+        // Karakter Zıplama Sesi (Tizleşen sweep)
+        playJump() {
+          if (this.muted) return;
+          this.initContext();
+          if (!this.ctx) return;
+
+          const now = this.ctx.currentTime;
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(220, now);
+          osc.frequency.exponentialRampToValueAtTime(540, now + 0.18);
+
+          gain.gain.setValueAtTime(0.3, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+
+          osc.start(now);
+          osc.stop(now + 0.22);
+        }
+
+        // Doğru Kesir / Tahta Döşeme Akoru (C5 - E5 - G5 - C6)
+        playCorrect() {
+          if (this.muted) return;
+          this.initContext();
+          if (!this.ctx) return;
+
+          const notes = [523.25, 659.25, 783.99, 1046.50];
+          notes.forEach((freq, idx) => {
+            const now = this.ctx.currentTime + (idx * 0.055);
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, now);
+
+            gain.gain.setValueAtTime(0.2, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+
+            osc.start(now);
+            osc.stop(now + 0.35);
+          });
+        }
+
+        // Hata / Suya Düşme ve Sarsıntı Sesi
+        playWrong() {
+          if (this.muted) return;
+          this.initContext();
+          if (!this.ctx) return;
+
+          const now = this.ctx.currentTime;
+          // Basit gürültü + düşük kare dalga
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(160, now);
+          osc.frequency.exponentialRampToValueAtTime(65, now + 0.25);
+
+          gain.gain.setValueAtTime(0.35, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+
+          osc.start(now);
+          osc.stop(now + 0.3);
+        }
+
+        // Zafer Fanfarı (Victory fanfare)
+        playVictory() {
+          if (this.muted) return;
+          this.initContext();
+          if (!this.ctx) return;
+
+          const melody = [
+            { f: 523.25, d: 0.12 },
+            { f: 659.25, d: 0.12 },
+            { f: 783.99, d: 0.12 },
+            { f: 1046.50, d: 0.45 },
+            { f: 880.00, d: 0.15 },
+            { f: 1046.50, d: 0.65 }
+          ];
+
+          let timeOffset = 0;
+          melody.forEach(item => {
+            const now = this.ctx.currentTime + timeOffset;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(item.f, now);
+
+            gain.gain.setValueAtTime(0.28, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + item.d);
+
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+
+            osc.start(now);
+            osc.stop(now + item.d);
+
+            timeOffset += item.d + 0.04;
+          });
+        }
+
+        // Tıklama Sesi
+        playClick() {
+          if (this.muted) return;
+          this.initContext();
+          if (!this.ctx) return;
+
+          const now = this.ctx.currentTime;
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(800, now);
+          osc.frequency.exponentialRampToValueAtTime(300, now + 0.05);
+
+          gain.gain.setValueAtTime(0.12, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+
+          osc.start(now);
+          osc.stop(now + 0.05);
+        }
+      }
+
+      /* ----------------------------------------------------
+         2. SAF CANVAS KONFETİ MOTORU
+         ---------------------------------------------------- */
+      class ConfettiEngine {
+        constructor(canvasId) {
+          this.canvas = document.getElementById(canvasId);
+          this.ctx = this.canvas.getContext('2d');
+          this.particles = [];
+          this.animId = null;
+          this.resize();
+          window.addEventListener('resize', () => this.resize());
+        }
+
+        resize() {
+          this.canvas.width = window.innerWidth;
+          this.canvas.height = window.innerHeight;
+        }
+
+        launch() {
+          this.particles = [];
+          const colors = ['#feca57', '#ff6b81', '#00d2d3', '#1dd1a1', '#54a0ff', '#5f27cd', '#ffffff'];
+          const count = 120;
+
+          for (let i = 0; i < count; i++) {
+            this.particles.push({
+              x: this.canvas.width * (0.3 + Math.random() * 0.4),
+              y: this.canvas.height * 0.4,
+              vx: (Math.random() - 0.5) * 16,
+              vy: (Math.random() - 0.8) * 18,
+              size: 7 + Math.random() * 8,
+              color: colors[Math.floor(Math.random() * colors.length)],
+              rot: Math.random() * 360,
+              rotSpeed: (Math.random() - 0.5) * 10,
+              opacity: 1
+            });
+          }
+
+          if (this.animId) cancelAnimationFrame(this.animId);
+          this.loop();
+        }
+
+        loop() {
+          this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+          for (let i = this.particles.length - 1; i >= 0; i--) {
+            const p = this.particles[i];
+            p.x += p.vx;
+            p.y += p.vy;
+            p.vy += 0.35; // Yerçekimi
+            p.vx *= 0.98; // Hava direnci
+            p.rot += p.rotSpeed;
+
+            if (p.y > this.canvas.height + 20) {
+              this.particles.splice(i, 1);
+              continue;
+            }
+
+            this.ctx.save();
+            this.ctx.translate(p.x, p.y);
+            this.ctx.rotate((p.rot * Math.PI) / 180);
+            this.ctx.fillStyle = p.color;
+            this.ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6);
+            this.ctx.restore();
+          }
+
+          if (this.particles.length > 0) {
+            this.animId = requestAnimationFrame(() => this.loop());
+          } else {
+            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+          }
+        }
+
+        stop() {
+          if (this.animId) cancelAnimationFrame(this.animId);
+          this.particles = [];
+          this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        }
+      }
+
+      /* ----------------------------------------------------
+         3. DENK KESİR MATEMATİK MOTORU
+         ---------------------------------------------------- */
+      class FractionMath {
+        // En Büyük Ortak Bölen (EBOB / GCD)
+        static gcd(a, b) {
+          return b === 0 ? a : FractionMath.gcd(b, a % b);
+        }
+
+        // İki kesir denk mi kontrolü (n1/d1 === n2/d2 => n1*d2 === n2*d1)
+        static areEquivalent(f1, f2) {
+          return (f1.num * f2.den) === (f2.num * f1.den);
+        }
+
+        // Basit temel kesir havuzu (Sadeleşmiş halleri)
+        static getBaseFractions() {
+          return [
+            { num: 1, den: 2 },
+            { num: 1, den: 3 },
+            { num: 2, den: 3 },
+            { num: 1, den: 4 },
+            { num: 3, den: 4 },
+            { num: 1, den: 5 },
+            { num: 2, den: 5 },
+            { num: 3, den: 5 },
+            { num: 4, den: 5 },
+            { num: 1, den: 6 },
+            { num: 5, den: 6 },
+            { num: 3, den: 8 },
+            { num: 5, den: 8 }
+          ];
+        }
+
+        // Yeni bir hedef kesir ve 3 seçenek oluştur (1 doğru, 2 yanlış)
+        static generateRoundQuestion(excludeBase = null) {
+          const pool = FractionMath.getBaseFractions().filter(
+            f => !excludeBase || (f.num !== excludeBase.num || f.den !== excludeBase.den)
+          );
+          const base = pool[Math.floor(Math.random() * pool.length)];
+
+          // Hedef kesir: Ya temel kesir ya da küçük bir genişletme (örn: 2/3 ya da 4/6)
+          const targetMultipliers = [1, 2, 3];
+          const targetMult = targetMultipliers[Math.floor(Math.random() * targetMultipliers.length)];
+          const target = {
+            num: base.num * targetMult,
+            den: base.den * targetMult,
+            baseNum: base.num,
+            baseDen: base.den
+          };
+
+          // Doğru seçenek: Hedef ile denk olan farklı bir çarpanlı kesir
+          const validMultipliers = [1, 2, 3, 4, 5, 6].filter(m => m !== targetMult);
+          const correctMult = validMultipliers[Math.floor(Math.random() * validMultipliers.length)];
+          const correctChoice = {
+            num: base.num * correctMult,
+            den: base.den * correctMult,
+            isCorrect: true,
+            explanation: `${base.num}/${base.den}'in ${correctMult} ile genişletilmiş hali!`
+          };
+
+          // Yanlış seçenekler (Distractors):
+          const distractors = [];
+          const usedKeys = new Set([`${correctChoice.num}/${correctChoice.den}`, `${target.num}/${target.den}`]);
+
+          let attempts = 0;
+          while (distractors.length < 2 && attempts < 50) {
+            attempts++;
+            // Sahte kesir üretme stratejileri:
+            // 1. Payı doğru paydası 1 farklı, ya da paydası doğru payı 1 farklı
+            let dNum, dDen;
+            const rType = Math.random();
+
+            if (rType < 0.35) {
+              // Benzer pay/payda
+              dNum = correctChoice.num;
+              dDen = correctChoice.den + (Math.random() < 0.5 ? 1 : 2);
+            } else if (rType < 0.7) {
+              dNum = Math.max(1, correctChoice.num + (Math.random() < 0.5 ? -1 : 1));
+              dDen = correctChoice.den;
+            } else {
+              // Rastgele başka bir kesir
+              const other = pool[Math.floor(Math.random() * pool.length)];
+              const mult = 1 + Math.floor(Math.random() * 3);
+              dNum = other.num * mult;
+              dDen = other.den * mult;
+            }
+
+            if (dDen <= dNum && base.num < base.den) {
+              // Basit kesir kalmasını tercih et
+              dDen = dNum + 1 + Math.floor(Math.random() * 3);
+            }
+
+            const key = `${dNum}/${dDen}`;
+            if (!usedKeys.has(key) && !FractionMath.areEquivalent({ num: dNum, den: dDen }, target)) {
+              usedKeys.add(key);
+              distractors.push({
+                num: dNum,
+                den: dDen,
+                isCorrect: false,
+                explanation: `${dNum}/${dDen} ≠ ${target.num}/${target.den}`
+              });
+            }
+          }
+
+          // Seçenekleri karıştır
+          const choices = [correctChoice, ...distractors].sort(() => Math.random() - 0.5);
+
+          return {
+            target,
+            choices,
+            correctChoice
+          };
+        }
+      }
+
+      /* ----------------------------------------------------
+         4. OYUN YÖNETİCİSİ (GAME CONTROLLER)
+         ---------------------------------------------------- */
+      class DuelGame {
+        constructor() {
+          this.sound = new SoundEngine();
+          this.confetti = new ConfettiEngine('confettiCanvas');
+          this.totalSteps = 5;
+          this.mode = '2p'; // '2p' (2 Kişilik) veya 'ai' (Bilgisayara Karşı)
+          this.isGameOver = false;
+
+          // Oyuncu durumları
+          this.players = {
+            p1: {
+              id: 'p1',
+              name: 'Kızıl Tilki',
+              avatar: '🦊',
+              step: 0,
+              correctCount: 0,
+              errorCount: 0,
+              isStunned: false,
+              currentQuestion: null,
+              keys: ['KeyA', 'KeyS', 'KeyD'],
+              runnerEl: document.getElementById('p1Runner'),
+              stageEl: document.getElementById('stageP1'),
+              bridgePathEl: document.getElementById('p1BridgePath'),
+              targetBadgeEl: document.getElementById('p1TargetBadge'),
+              stonesEl: document.getElementById('p1Stones'),
+              dotsContainer: document.getElementById('p1Dots'),
+              stepLabel: document.getElementById('p1StepLabel'),
+              feedbackEl: document.getElementById('p1Feedback'),
+              slots: document.querySelectorAll('#trackP1 .plank-slot')
+            },
+            p2: {
+              id: 'p2',
+              name: 'Gök Kurdu',
+              avatar: '🐺',
+              step: 0,
+              correctCount: 0,
+              errorCount: 0,
+              isStunned: false,
+              currentQuestion: null,
+              keys: ['ArrowLeft', 'ArrowDown', 'ArrowRight'],
+              altKeys: ['KeyJ', 'KeyK', 'KeyL'],
+              runnerEl: document.getElementById('p2Runner'),
+              stageEl: document.getElementById('stageP2'),
+              bridgePathEl: document.getElementById('p2BridgePath'),
+              targetBadgeEl: document.getElementById('p2TargetBadge'),
+              stonesEl: document.getElementById('p2Stones'),
+              dotsContainer: document.getElementById('p2Dots'),
+              stepLabel: document.getElementById('p2StepLabel'),
+              feedbackEl: document.getElementById('p2Feedback'),
+              slots: document.querySelectorAll('#trackP2 .plank-slot')
+            }
+          };
+
+          this.aiTimer = null;
+          this.bindEvents();
+          this.initGame();
+        }
+
+        bindEvents() {
+          // Mod Değiştirme Butonu
+          const btnMode = document.getElementById('btnMode');
+          btnMode.addEventListener('click', () => {
+            this.sound.playClick();
+            this.toggleGameMode();
+          });
+
+          // Ses Butonu
+          const btnSound = document.getElementById('btnSound');
+          btnSound.addEventListener('click', () => {
+            const isMuted = this.sound.toggleMute();
+            btnSound.querySelector('#soundIcon').textContent = isMuted ? '🔇' : '🔊';
+          });
+
+          // Rehber Butonları
+          document.getElementById('btnGuide').addEventListener('click', () => {
+            this.sound.playClick();
+            document.getElementById('guideModal').classList.add('active');
+          });
+
+          document.getElementById('btnCloseGuide').addEventListener('click', () => {
+            this.sound.playClick();
+            document.getElementById('guideModal').classList.remove('active');
+          });
+
+          // İndirme & Kod Paylaşımı Butonları
+          const btnDownload = document.getElementById('btnDownload');
+          const downloadModal = document.getElementById('downloadModal');
+          const btnCloseDownload = document.getElementById('btnCloseDownload');
+          const btnDownloadConfirm = document.getElementById('btnDownloadConfirm');
+          const btnCopyCode = document.getElementById('btnCopyCode');
+
+          if (btnDownload && downloadModal) {
+            btnDownload.addEventListener('click', () => {
+              this.sound.playClick();
+              downloadModal.classList.add('active');
+            });
+          }
+
+          if (btnCloseDownload && downloadModal) {
+            btnCloseDownload.addEventListener('click', () => {
+              this.sound.playClick();
+              downloadModal.classList.remove('active');
+            });
+          }
+
+          if (btnDownloadConfirm) {
+            btnDownloadConfirm.addEventListener('click', () => {
+              this.sound.playCorrect();
+              this.downloadGameFile();
+            });
+          }
+
+          if (btnCopyCode) {
+            btnCopyCode.addEventListener('click', () => {
+              this.sound.playClick();
+              this.copyGameCode();
+            });
+          }
+
+          // Yeniden Başlat Butonları
+          document.getElementById('btnRestart').addEventListener('click', () => {
+            this.sound.playClick();
+            this.initGame();
+          });
+
+          document.getElementById('btnPlayAgain').addEventListener('click', () => {
+            this.sound.playClick();
+            document.getElementById('victoryModal').classList.remove('active');
+            this.confetti.stop();
+            this.initGame();
+          });
+
+          // Klavye Kontrolleri
+          window.addEventListener('keydown', (e) => this.handleKeyDown(e));
+
+          // Pencere boyutu değiştiğinde karakter pozisyonunu tazele
+          window.addEventListener('resize', () => {
+            this.updateRunnerPosition(this.players.p1);
+            this.updateRunnerPosition(this.players.p2);
+          });
+        }
+
+        toggleGameMode() {
+          if (this.mode === '2p') {
+            this.mode = 'ai';
+            document.getElementById('modeIcon').textContent = '🤖';
+            document.getElementById('modeText').textContent = 'VS Robot';
+            document.getElementById('p2TagLabel').textContent = 'YAPAY ZEKA';
+            document.getElementById('p2NameLabel').textContent = 'Mavi Bot';
+            document.getElementById('p2AvatarMini').textContent = '🤖';
+            document.getElementById('p2RunnerSprite').textContent = '🤖';
+            document.getElementById('p2Feedback').innerHTML = '🤖 Robot düşünüyor...';
+          } else {
+            this.mode = '2p';
+            document.getElementById('modeIcon').textContent = '👥';
+            document.getElementById('modeText').textContent = '2 Kişilik';
+            document.getElementById('p2TagLabel').textContent = 'OYUNCU 2';
+            document.getElementById('p2NameLabel').textContent = 'Gök Kurdu';
+            document.getElementById('p2AvatarMini').textContent = '🐺';
+            document.getElementById('p2RunnerSprite').textContent = '🐺';
+            document.getElementById('p2Feedback').innerHTML = 'Tuşlar: <strong>[←] [↓] [→]</strong> veya <strong>[J] [K] [L]</strong>';
+          }
+          this.initGame();
+        }
+
+        // Temiz, harici platform etiketlerinden arındırılmış bağımsız HTML içeriği üret
+        async getCleanStandaloneHtml() {
+          let text = '';
+          try {
+            const resp = await fetch(window.location.origin + window.location.pathname, { cache: 'no-store' });
+            if (resp.ok) {
+              text = await resp.text();
+            }
+          } catch (e) {
+            // Fallback
+          }
+
+          if (!text || text.indexOf('<!doctype html>') === -1 && text.indexOf('<!DOCTYPE html>') === -1) {
+            const clone = document.documentElement.cloneNode(true);
+            text = '<!doctype html>\n' + clone.outerHTML;
+          }
+
+          // 1. Vite geliştirme sunucusunun inject ettiği dahili scriptleri temizle
+          text = text.replace(/<script[^>]*src=["'][^"']*@vite[^"']*["'][^>]*>\s*<\/script>/gi, '');
+          text = text.replace(/<script[^>]*src=["'][^"']*vite\/client[^"']*["'][^>]*>\s*<\/script>/gi, '');
+
+          // 2. AI Studio veya barındırma sunucusunun eklediği platform etiketlerini ve watermark'ları kaldır
+          text = text.replace(/<[^>]*Built with AI Studio[\s\S]*?<\/div>/gi, '');
+          text = text.replace(/<h2[^>]*>Built with AI Studio<\/h2>/gi, '');
+          text = text.replace(/The fastest path from prompt to production with Gemini\./gi, '');
+          text = text.replace(//gi, '');
+          text = text.replace(/<div[^>]*class=["'][^"']*ai-studio[^"']*["'][\s\S]*?<\/div>/gi, '');
+          text = text.replace(/<div[^>]*id=["'][^"']*ai-studio[^"']*["'][\s\S]*?<\/div>/gi, '');
+
+          // 3. Modallardaki geçici 'active' sınıflarını temizle (indirilen dosya temiz açılsın)
+          text = text.replace(/class="modal-overlay"/g, 'class="modal-overlay"');
+
+          return text;
+        }
+
+        // HTML Kodunu Dosya Olarak İndir (.html)
+        async downloadGameFile() {
+          const htmlContent = await this.getCleanStandaloneHtml();
+          const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'denk-kesirler-koprusu.html';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          setTimeout(() => URL.revokeObjectURL(url), 1000);
+        }
+
+        // HTML Kodunu Panoya Kopyala
+        async copyGameCode() {
+          const htmlContent = await this.getCleanStandaloneHtml();
+          const copyText = document.getElementById('copyCodeText');
+          try {
+            await navigator.clipboard.writeText(htmlContent);
+            if (copyText) {
+              const old = copyText.textContent;
+              copyText.textContent = '✅ Kopyalandı!';
+              setTimeout(() => { copyText.textContent = old; }, 2000);
+            }
+          } catch {
+            const ta = document.createElement('textarea');
+            ta.value = htmlContent;
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+            if (copyText) {
+              const old = copyText.textContent;
+              copyText.textContent = '✅ Kopyalandı!';
+              setTimeout(() => { copyText.textContent = old; }, 2000);
+            }
+          }
+        }
+
+        initGame() {
+          if (this.aiTimer) clearTimeout(this.aiTimer);
+          this.isGameOver = false;
+          this.confetti.stop();
+          document.getElementById('victoryModal').classList.remove('active');
+
+          // Oyuncuları sıfırla
+          ['p1', 'p2'].forEach(pid => {
+            const p = this.players[pid];
+            p.step = 0;
+            p.correctCount = 0;
+            p.errorCount = 0;
+            p.isStunned = false;
+
+            // Noktaları temizle
+            const dots = p.dotsContainer.querySelectorAll('.step-dot');
+            dots.forEach(d => d.classList.remove('filled'));
+
+            // Tahtaları temizle
+            p.slots.forEach(slot => {
+              slot.classList.remove('completed', 'active-target');
+              const stepNum = parseInt(slot.dataset.step, 10);
+              if (stepNum === 1) slot.classList.add('active-target');
+            });
+
+            this.updateStepUI(p);
+            this.updateRunnerPosition(p);
+            this.generateNextQuestion(p);
+          });
+
+          // Yapay Zeka hamlesini başlat
+          if (this.mode === 'ai') {
+            this.scheduleAiTurn();
+          }
+        }
+
+        // Bir sonraki denk kesir sorusunu ata ve taşları çiz
+        generateNextQuestion(player) {
+          if (this.isGameOver) return;
+
+          const prevBase = player.currentQuestion ? {
+            num: player.currentQuestion.target.baseNum,
+            den: player.currentQuestion.target.baseDen
+          } : null;
+
+          const q = FractionMath.generateRoundQuestion(prevBase);
+          player.currentQuestion = q;
+
+          // Hedef kesir rozetini güncelle
+          player.targetBadgeEl.querySelector('.num').textContent = q.target.num;
+          player.targetBadgeEl.querySelector('.den').textContent = q.target.den;
+
+          // Taşları çiz
+          player.stonesEl.innerHTML = '';
+          q.choices.forEach((choice, idx) => {
+            const stone = document.createElement('button');
+            stone.className = 'fraction-stone';
+            stone.setAttribute('type', 'button');
+
+            // Tuş ipucu
+            const keyHint = document.createElement('span');
+            keyHint.className = 'key-hint';
+            if (player.id === 'p1') {
+              keyHint.textContent = ['A', 'S', 'D'][idx];
+            } else {
+              keyHint.textContent = ['←/J', '↓/K', '→/L'][idx];
+            }
+            stone.appendChild(keyHint);
+
+            const numSpan = document.createElement('span');
+            numSpan.className = 'num';
+            numSpan.textContent = choice.num;
+            stone.appendChild(numSpan);
+
+            const barDiv = document.createElement('div');
+            barDiv.className = 'bar';
+            stone.appendChild(barDiv);
+
+            const denSpan = document.createElement('span');
+            denSpan.className = 'den';
+            denSpan.textContent = choice.den;
+            stone.appendChild(denSpan);
+
+            // Tıklama olayı
+            stone.addEventListener('click', () => {
+              this.handleChoice(player, idx);
+            });
+
+            player.stonesEl.appendChild(stone);
+          });
+        }
+
+        // Klavye ile tuş basımı
+        handleKeyDown(e) {
+          if (this.isGameOver) return;
+
+          // Oyuncu 1 Tuşları: A (0), S (1), D (2) veya 1, 2, 3
+          if (e.code === 'KeyA' || e.key === '1') this.handleChoice(this.players.p1, 0);
+          else if (e.code === 'KeyS' || e.key === '2') this.handleChoice(this.players.p1, 1);
+          else if (e.code === 'KeyD' || e.key === '3') this.handleChoice(this.players.p1, 2);
+
+          // Oyuncu 2 Tuşları (Eğer 2 kişilik moddaysa)
+          if (this.mode === '2p') {
+            if (e.code === 'ArrowLeft' || e.code === 'KeyJ' || e.key === '4') this.handleChoice(this.players.p2, 0);
+            else if (e.code === 'ArrowDown' || e.code === 'KeyK' || e.key === '5') this.handleChoice(this.players.p2, 1);
+            else if (e.code === 'ArrowRight' || e.code === 'KeyL' || e.key === '6') this.handleChoice(this.players.p2, 2);
+          }
+        }
+
+        // Taş seçimi mantığı
+        handleChoice(player, choiceIndex) {
+          if (this.isGameOver || player.isStunned || !player.currentQuestion) return;
+
+          const choice = player.currentQuestion.choices[choiceIndex];
+          if (!choice) return;
+
+          if (choice.isCorrect) {
+            // DOĞRU SEÇİM!
+            player.correctCount++;
+            player.step++;
+            this.sound.playCorrect();
+            this.sound.playJump();
+
+            // Köprü tahtasını yerine oturt
+            const targetStep = player.step;
+            player.slots.forEach(slot => {
+              const sNum = parseInt(slot.dataset.step, 10);
+              if (sNum === targetStep) {
+                slot.classList.add('completed');
+                slot.classList.remove('active-target');
+              } else if (sNum === targetStep + 1) {
+                slot.classList.add('active-target');
+              }
+            });
+
+            // Geri bildirim
+            player.feedbackEl.className = 'feedback-banner success';
+            player.feedbackEl.innerHTML = `✅ Harika! ${choice.num}/${choice.den} = ${player.currentQuestion.target.num}/${player.currentQuestion.target.den}`;
+
+            // Karakter zıplaması ve pozisyon güncellemesi
+            player.runnerEl.classList.remove('jumping');
+            void player.runnerEl.offsetWidth; // Reflow
+            player.runnerEl.classList.add('jumping');
+
+            this.updateStepUI(player);
+            this.updateRunnerPosition(player);
+
+            // Bitiş kontrolü (5 Adım)
+            if (player.step >= this.totalSteps) {
+              this.handleVictory(player);
+              return;
+            }
+
+            // Yeni soru oluştur
+            setTimeout(() => {
+              if (!this.isGameOver) {
+                this.generateNextQuestion(player);
+                if (player.id === 'p2' && this.mode === 'ai') {
+                  this.scheduleAiTurn();
+                }
+              }
+            }, 350);
+
+          } else {
+            // YANLIŞ SEÇİM!
+            player.errorCount++;
+            player.isStunned = true;
+            this.sound.playWrong();
+
+            // Karakter sendelemesi & sarsıntı
+            player.runnerEl.classList.add('stunned');
+            player.feedbackEl.className = 'feedback-banner error';
+            player.feedbackEl.innerHTML = `❌ Denk Değil: ${choice.num}/${choice.den} ≠ ${player.currentQuestion.target.num}/${player.currentQuestion.target.den}! (Bekle...)`;
+
+            // Su sıçrama efekti
+            this.spawnWaterSplash(player);
+
+            // 1.2 saniyelik ceza süresi
+            setTimeout(() => {
+              player.isStunned = false;
+              player.runnerEl.classList.remove('stunned');
+              player.feedbackEl.className = 'feedback-banner';
+              if (player.id === 'p1') {
+                player.feedbackEl.innerHTML = 'Tekrar dene! <strong>[A] [S] [D]</strong>';
+              } else {
+                player.feedbackEl.innerHTML = this.mode === 'ai' ? '🤖 Sıra Yapay Zekada...' : 'Tekrar dene! <strong>[←] [↓] [→]</strong>';
+              }
+
+              if (player.id === 'p2' && this.mode === 'ai' && !this.isGameOver) {
+                this.scheduleAiTurn();
+              }
+            }, 1200);
+          }
+        }
+
+        // Yapay Zeka (AI) Otomasyonu
+        scheduleAiTurn() {
+          if (this.mode !== 'ai' || this.isGameOver) return;
+          if (this.aiTimer) clearTimeout(this.aiTimer);
+
+          // Robot 2.2 ile 3.8 saniye arasında düşünür
+          const thinkTime = 2200 + Math.random() * 1600;
+          this.aiTimer = setTimeout(() => {
+            if (this.isGameOver || this.players.p2.isStunned || !this.players.p2.currentQuestion) return;
+
+            const q = this.players.p2.currentQuestion;
+            // Robot %85 ihtimalle doğru taş seçer, %15 hata yapar
+            const isSmart = Math.random() < 0.85;
+            let pickIndex = 0;
+
+            if (isSmart) {
+              pickIndex = q.choices.findIndex(c => c.isCorrect);
+            } else {
+              const wrongIndices = [];
+              q.choices.forEach((c, idx) => {
+                if (!c.isCorrect) wrongIndices.push(idx);
+              });
+              pickIndex = wrongIndices.length > 0
+                ? wrongIndices[Math.floor(Math.random() * wrongIndices.length)]
+                : 0;
+            }
+
+            this.handleChoice(this.players.p2, pickIndex);
+          }, thinkTime);
+        }
+
+        // Skor ve Noktaları Güncelle
+        updateStepUI(player) {
+          player.stepLabel.textContent = `Köprü: ${player.step} / ${this.totalSteps}`;
+          const dots = player.dotsContainer.querySelectorAll('.step-dot');
+          dots.forEach((dot, idx) => {
+            if (idx < player.step) {
+              dot.classList.add('filled');
+            } else {
+              dot.classList.remove('filled');
+            }
+          });
+        }
+
+        // Karakterin köprü üzerindeki dikey konumunu pürüzsüz hesapla
+        updateRunnerPosition(player) {
+          const stageRect = player.stageEl.getBoundingClientRect();
+          let targetY;
+
+          if (player.step === 0) {
+            // Başlangıç iskelesi
+            const shoreStart = player.stageEl.querySelector('.shore-start');
+            const shoreRect = shoreStart.getBoundingClientRect();
+            targetY = (shoreRect.top + shoreRect.height / 2) - stageRect.top;
+          } else if (player.step >= this.totalSteps) {
+            // Karşı kıyı / Zafer Kalesi
+            const shoreTarget = player.stageEl.querySelector('.shore-target');
+            const shoreRect = shoreTarget.getBoundingClientRect();
+            targetY = (shoreRect.top + shoreRect.height / 2) - stageRect.top;
+          } else {
+            // Köprü tahtaları
+            const slot = player.stageEl.querySelector(`.plank-slot[data-step="${player.step}"]`);
+            if (slot) {
+              const slotRect = slot.getBoundingClientRect();
+              targetY = (slotRect.top + slotRect.height / 2) - stageRect.top;
+            } else {
+              targetY = stageRect.height * 0.5;
+            }
+          }
+
+          player.runnerEl.style.top = `${targetY}px`;
+        }
+
+        // Yanlış seçimde su sıçrama parçacıkları saç
+        spawnWaterSplash(player) {
+          const runnerRect = player.runnerEl.getBoundingClientRect();
+          const count = 10;
+          for (let i = 0; i < count; i++) {
+            const part = document.createElement('div');
+            part.className = 'splash-particle';
+            const tx = (Math.random() - 0.5) * 60;
+            const ty = 15 + Math.random() * 45;
+            part.style.setProperty('--tx', `${tx}px`);
+            part.style.setProperty('--ty', `${ty}px`);
+            part.style.left = `${runnerRect.left + runnerRect.width / 2}px`;
+            part.style.top = `${runnerRect.top + runnerRect.height / 2}px`;
+            document.body.appendChild(part);
+
+            setTimeout(() => part.remove(), 600);
+          }
+        }
+
+        // Zafer Ekranı ve Kutlama
+        handleVictory(winner) {
+          this.isGameOver = true;
+          if (this.aiTimer) clearTimeout(this.aiTimer);
+
+          this.sound.playVictory();
+          this.confetti.launch();
+
+          const victoryModal = document.getElementById('victoryModal');
+          const title = document.getElementById('victoryTitle');
+          const sub = document.getElementById('victorySubtitle');
+
+          title.textContent = `👑 ${winner.name.toUpperCase()} KAZANDI!`;
+          sub.textContent = `${winner.name} 5 denk kesir köprü tahtasını tamamlayarak Zafer Kalesine ilk ulaştı!`;
+
+          // İstatistikleri doldur
+          document.getElementById('statP1Score').textContent = `${this.players.p1.correctCount} Doğru`;
+          document.getElementById('statP1Errors').textContent = `${this.players.p1.errorCount} Hata`;
+
+          const p2Name = this.mode === 'ai' ? '🤖 Mavi Bot' : '🐺 Gök Kurdu';
+          document.getElementById('statP2Header').textContent = p2Name;
+          document.getElementById('statP2Score').textContent = `${this.players.p2.correctCount} Doğru`;
+          document.getElementById('statP2Errors').textContent = `${this.players.p2.errorCount} Hata`;
+
+          setTimeout(() => {
+            victoryModal.classList.add('active');
+          }, 400);
+        }
+      }
+
+      // Oyunu Başlat
+      const gameInstance = new DuelGame();
+    });
+  </script>
+</body>
+</html>
